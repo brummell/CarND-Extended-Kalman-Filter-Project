@@ -100,7 +100,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
         // done initializing, no need to predict or update
         is_initialized_ = true;
-        cout << "EKF initialized " << endl;
         return;
     }
 
@@ -118,7 +117,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //compute the time elapsed between the current and previous measurements
     auto dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;    //dt - expressed in seconds
     previous_timestamp_ = measurement_pack.timestamp_;
-    cout << dt << endl;
+
     //Modify the F matrix so that the time is integrated
     ekf_.F_(0, 2) = dt;
     ekf_.F_(1, 3) = dt;
@@ -141,15 +140,18 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         ekf_.H_ = Hj_;
         ekf_.R_ = R_radar_;
         ekf_.UpdateEKF(measurement_pack.raw_measurements_);
+        cout << "RADAR" << endl;
     } else {
         ekf_.H_ = H_laser_;
         ekf_.R_ = R_laser_;
         ekf_.Update(measurement_pack.raw_measurements_);
+        cout << "LIDAR" << endl;
+
 
     }
 
-    cout << "x_ = " << ekf_.x_ << endl;
-    cout << "P_ = " << ekf_.P_ << endl;
+//    cout << "x_ = " << ekf_.x_ << endl;
+//    cout << "P_ = " << ekf_.P_ << endl;
 }
 #pragma clang diagnostic pop
 

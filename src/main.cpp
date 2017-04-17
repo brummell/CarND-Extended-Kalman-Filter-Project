@@ -135,8 +135,10 @@ int main(int argc, char *argv[]) {
 
     cout << "Beginning run" << endl;
     for (size_t k = 0; k < N; ++k) {
+//        if (k == 10) { break; }
         // start filtering from the second frame (the speed is unknown in the first
         // frame)
+        if (measurement_pack_list[k].sensor_type_ == MeasurementPackage::LASER) {continue;}
         fusionEKF.ProcessMeasurement(measurement_pack_list[k]);
 
         // output the estimation
@@ -166,6 +168,7 @@ int main(int argc, char *argv[]) {
 
         estimations.push_back(fusionEKF.ekf_.x_);
         ground_truth.push_back(gt_pack_list[k].gt_values_);
+        cout << "ground truth " << gt_pack_list[k].gt_values_ << endl;
     }
 
     // compute the accuracy (RMSE)

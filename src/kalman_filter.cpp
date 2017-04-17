@@ -20,17 +20,24 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 }
 
 void KalmanFilter::Predict() {
+    cout << "x before predict" << x_ << endl;
     x_ = F_ * x_;
-    P_ = F_ * P_ * F_.transpose() + Q_;
+    MatrixXd Ft_(4,4);
+    Ft_ = F_.transpose();
+    P_ = F_ * P_ * Ft_ + Q_;
+    cout << "x after predict" << x_ << endl;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-    auto H_t = H_.transpose();
-
+    MatrixXd Ht_(4,2);
+    Ht_ = H_.transpose();
     VectorXd y = z - H_ * x_;
-    auto S_ = H_ * P_ * H_t + R_;
-    auto S_i = S_.transpose();
-    auto K_ = P_ * H_t * S_i;
+    MatrixXd S_(2,2);
+    S_ = H_ * P_ * Ht_ + R_;
+    MatrixXd S_i(2,2);
+    S_i = S_.inverse();
+    MatrixXd K_(4,2);
+    K_ = P_ * Ht_ * S_i;
     MatrixXd I_(4, 4);
     I_.setIdentity(4,4);
     x_ = x_ + K_ * y;
@@ -38,22 +45,33 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-    /**
-    TODO:
-      * update the state by using Extended Kalman Filter equations
-    */
     VectorXd h_x(3);
-    h_x << sqrt((pow(x_(0), 2.0), pow(x_(1), 2.0))),
-            atan((x_(1) / x_(0))),
-            (x_(0) * x_(2) + x_(1) * x_(3)) / sqrt((pow(x_(0), 2.0), pow(x_(1), 2.0)));
+    h_x << sqrt((pow(x_(0), 2.0) + pow(x_(1), 2.0))),
+            atan2(x_(1), x_(0)),
+            (x_(0) * x_(2) + x_(1) * x_(3)) / sqrt((pow(x_(0), 2.0) + pow(x_(1), 2.0)));
 
-    auto Hj_t = H_.transpose();
-    auto y = z - h_x;
-    auto S_ = H_ * P_ * Hj_t + R_;
-    auto S_i = S_.transpose();
-    auto K_ = P_ * Hj_t * S_i;
+    MatrixXd Ht_(4,3);
+    Ht_ = H_.transpose();
+    VectorXd y(3);
+    y = z - h_x;
+    cout << "measured: " << z << endl;
+    cout << "predicted: " << h_x << endl;
+    MatrixXd S_(3,3);
+    S_ = H_ * P_ * Ht_ + R_;
+
+    MatrixXd S_i(3,3);
+    S_i = S_.inverse();
+
+    MatrixXd K_(4,3);
+    K_ = P_ * Ht_ * S_i;
+
     MatrixXd I_(4, 4);
     I_.setIdentity(4,4);
+
     x_ = x_ + K_ * y;
     P_ = (I_ - K_ * H_) * P_;
+    cout << "optim: " << x_ << endl;
 }
+//0.999586    0.0287562            0            0
+//-0.00352309     0.122465            0            0
+//9.58419e-20 -3.33153e-18     0.999586    0.0287562
