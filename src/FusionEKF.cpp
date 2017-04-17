@@ -105,8 +105,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
+    // Call EKF update with RADAR matrices kalman_filter.cpp
   } else {
     // Laser updates
+    // Call KF update with LIDAR matrices from kalman_filter.cpp
   }
 
   // print the output
