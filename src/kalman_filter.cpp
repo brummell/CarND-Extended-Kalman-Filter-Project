@@ -44,11 +44,11 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
             atan((x_(1) / x_(0))),
             (x_(0) * x_(2) + x_(1) * x_(3)) / sqrt((pow(x_(0), 2), pow(x_(1), 2)));
 
-    auto H_t = H_.transpose();
-    auto y = z - H_ * x_;
-    auto S_ = H_ * P_ * H_t + R_;
+    auto Hj_t = H_.transpose();
+    auto y = z - h_x;
+    auto S_ = H_ * P_ * H_j_t + R_;
     auto S_i = S_.transpose();
-    auto K_ = P_ * H_t * S_i;
+    auto K_ = P_ * H_j_t * S_i;
     MatrixXd::Identity I_(4, 4);
     x_ = x_ + K_ * y;
     P_ = (I_ - K_ * H_) * P_;

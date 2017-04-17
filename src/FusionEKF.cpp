@@ -1,6 +1,6 @@
 #include "FusionEKF.h"
 #include "tools.h"
-#include "cmath"
+//#include "cmath"
 #include "Eigen/Dense"
 #include <iostream>
 
@@ -22,6 +22,8 @@ FusionEKF::FusionEKF() {
     R_radar_ = MatrixXd(3, 3);
     H_laser_ = MatrixXd(2, 4);
     Hj_ = MatrixXd(3, 4);
+    H_laser_ << 1, 0, 0, 0,
+                0, 1, 0, 0;
 
     //measurement covariance matrix - laser
     R_laser_ << 0.0225, 0,
@@ -53,12 +55,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      *  Initialization
      ****************************************************************************/
     if (!is_initialized_) {
-        /**
-        TODO:
-          * Initialize the state ekf_.x_ with the first measurement.
-          * Create the covariance matrix.
-          * Remember: you'll need to convert radar from polar to cartesian coordinates.
-        */
         // first measurement
         cout << "EKF: " << endl;
         ekf_.x_ = VectorXd(4);
@@ -132,9 +128,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         // Radar updates
         // Call EKF update with RADAR matrices kalman_filter.cpp
         ekf_.Update(measurement_pack.raw_measurements_);
+        ekf_.H_ = H_laser_;
+        ekf_.R_ = R_laser_;
     } else {
         // Laser updates
         // Call KF update with LIDAR matrices from kalman_filter.cpp
+        auto tools = Tools();
+        Hj_ = tools.CalculateJacobian(ekf_.x_);
+        ekf_.H_ = Hj_;
+        ekf_.R_ = R_radar_;
         ekf_.UpdateEKF(measurement_pack.raw_measurements_);
     }
 
