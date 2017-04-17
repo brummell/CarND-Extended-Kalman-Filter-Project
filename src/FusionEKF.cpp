@@ -4,6 +4,8 @@
 #include "Eigen/Dense"
 #include <iostream>
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "IncompatibleTypes"
 using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -34,6 +36,12 @@ FusionEKF::FusionEKF() {
             0, 0.0009, 0,
             0, 0, 0.09;
 
+    ekf_.F_ = MatrixXd(4,4);
+    ekf_.F_ << 1, 0, 0, 0,
+               0, 1, 0, 0,
+               0, 0, 1, 0,
+               0, 0, 0, 1;
+
     /**
     TODO:
       * Finish initializing the FusionEKF.
@@ -49,20 +57,21 @@ FusionEKF::FusionEKF() {
 FusionEKF::~FusionEKF() {}
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
-
-
     /*****************************************************************************
      *  Initialization
      ****************************************************************************/
     if (!is_initialized_) {
         // first measurement
-        cout << "EKF: " << endl;
         ekf_.x_ = VectorXd(4);
         ekf_.x_ << 1, 1, 1, 1;
+
+        ekf_.P_= MatrixXd(4,4);
         ekf_.P_ << 10000, 0, 0, 0,
                 0, 10000, 0, 0,
                 0, 0, 10000, 0,
                 0, 0, 0, 10000;
+
+        ekf_.Q_= MatrixXd(4,4);
 
         previous_timestamp_ = measurement_pack.timestamp_;
 
@@ -91,6 +100,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
         // done initializing, no need to predict or update
         is_initialized_ = true;
+        cout << "EKF initialized " << endl;
         return;
     }
 
@@ -108,7 +118,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     //compute the time elapsed between the current and previous measurements
     auto dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;    //dt - expressed in seconds
     previous_timestamp_ = measurement_pack.timestamp_;
-
+    cout << dt << endl;
     //Modify the F matrix so that the time is integrated
     ekf_.F_(0, 2) = dt;
     ekf_.F_(1, 3) = dt;
@@ -119,28 +129,28 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
             pow(dt, 3.0) / 2 * noise_ax, 0, pow(dt, 2.0) * noise_ax, 0,
             0, pow(dt, 3.0) / 2 * noise_ay, 0, pow(dt, 2.0) * noise_ay;
 
+
     ekf_.Predict();
 
     /*****************************************************************************
      *  Update
      ****************************************************************************/
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-        // Radar updates
-        // Call EKF update with RADAR matrices kalman_filter.cpp
-        ekf_.Update(measurement_pack.raw_measurements_);
-        ekf_.H_ = H_laser_;
-        ekf_.R_ = R_laser_;
-    } else {
-        // Laser updates
-        // Call KF update with LIDAR matrices from kalman_filter.cpp
         auto tools = Tools();
         Hj_ = tools.CalculateJacobian(ekf_.x_);
         ekf_.H_ = Hj_;
         ekf_.R_ = R_radar_;
         ekf_.UpdateEKF(measurement_pack.raw_measurements_);
+    } else {
+        ekf_.H_ = H_laser_;
+        ekf_.R_ = R_laser_;
+        ekf_.Update(measurement_pack.raw_measurements_);
+
     }
 
-    // print the output
     cout << "x_ = " << ekf_.x_ << endl;
     cout << "P_ = " << ekf_.P_ << endl;
 }
+#pragma clang diagnostic pop
+
+#pragma clang diagnostic pop

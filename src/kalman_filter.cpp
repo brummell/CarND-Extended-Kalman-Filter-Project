@@ -1,5 +1,7 @@
 #include "kalman_filter.h"
+#include <iostream>
 
+using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -24,14 +26,15 @@ void KalmanFilter::Predict() {
 
 void KalmanFilter::Update(const VectorXd &z) {
     auto H_t = H_.transpose();
-    auto y = z - H_ * x_;
+
+    VectorXd y = z - H_ * x_;
     auto S_ = H_ * P_ * H_t + R_;
     auto S_i = S_.transpose();
     auto K_ = P_ * H_t * S_i;
-    MatrixXd::Identity I_(4, 4);
+    MatrixXd I_(4, 4);
+    I_.setIdentity(4,4);
     x_ = x_ + K_ * y;
     P_ = (I_ - K_ * H_) * P_;
-
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
@@ -40,16 +43,17 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
       * update the state by using Extended Kalman Filter equations
     */
     VectorXd h_x(3);
-    h_x << sqrt((pow(x_(0), 2), pow(x_(1), 2))),
+    h_x << sqrt((pow(x_(0), 2.0), pow(x_(1), 2.0))),
             atan((x_(1) / x_(0))),
-            (x_(0) * x_(2) + x_(1) * x_(3)) / sqrt((pow(x_(0), 2), pow(x_(1), 2)));
+            (x_(0) * x_(2) + x_(1) * x_(3)) / sqrt((pow(x_(0), 2.0), pow(x_(1), 2.0)));
 
     auto Hj_t = H_.transpose();
     auto y = z - h_x;
-    auto S_ = H_ * P_ * H_j_t + R_;
+    auto S_ = H_ * P_ * Hj_t + R_;
     auto S_i = S_.transpose();
-    auto K_ = P_ * H_j_t * S_i;
-    MatrixXd::Identity I_(4, 4);
+    auto K_ = P_ * Hj_t * S_i;
+    MatrixXd I_(4, 4);
+    I_.setIdentity(4,4);
     x_ = x_ + K_ * y;
     P_ = (I_ - K_ * H_) * P_;
 }
