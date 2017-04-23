@@ -45,6 +45,9 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
+    if (x_(0)==0) { x_(0) = 0.00001;}
+    if (x_(1)==0) { x_(1) = 0.00001;}
+    if (x_(2)==0) { x_(2) = 0.00001;}
     VectorXd h_x(3);
     h_x << sqrt((pow(x_(0), 2.0) + pow(x_(1), 2.0))),
             atan2(x_(1), x_(0)),

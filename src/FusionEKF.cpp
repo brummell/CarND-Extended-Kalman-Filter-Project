@@ -24,6 +24,9 @@ FusionEKF::FusionEKF() {
     R_radar_ = MatrixXd(3, 3);
     H_laser_ = MatrixXd(2, 4);
     Hj_ = MatrixXd(3, 4);
+    Hj_ << 0, 0, 0, 0,
+           0, 0, 0, 0,
+           0, 0, 0, 0;
     H_laser_ << 1, 0, 0, 0,
                 0, 1, 0, 0;
 
@@ -42,11 +45,6 @@ FusionEKF::FusionEKF() {
                0, 0, 1, 0,
                0, 0, 0, 1;
 
-    /**
-    TODO:
-      * Finish initializing the FusionEKF.
-      * Set the process and measurement noises
-    */
     noise_ax = 9;
     noise_ay = 9;
 }
@@ -106,14 +104,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     /*****************************************************************************
      *  Prediction
      ****************************************************************************/
-
-    /**
-     TODO:
-       * Update the state transition matrix F according to the new elapsed time.
-        - Time is measured in seconds.
-       * Update the process noise covariance matrix.
-       * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
-     */
     //compute the time elapsed between the current and previous measurements
     auto dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;    //dt - expressed in seconds
     previous_timestamp_ = measurement_pack.timestamp_;
@@ -149,9 +139,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
 
     }
-
-//    cout << "x_ = " << ekf_.x_ << endl;
-//    cout << "P_ = " << ekf_.P_ << endl;
 }
 #pragma clang diagnostic pop
 
